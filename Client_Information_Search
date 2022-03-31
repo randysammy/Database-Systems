@@ -1,0 +1,256 @@
+#include <iostream> 
+#include<fstream> 
+#include <string>
+#include <stdio.h>
+#include <stdlib.h>
+#include <iomanip>      // std::setw
+
+using namespace std; 
+
+
+struct IndexEntry
+{
+    int acctID;  // (acctID) Account Identifer 
+    long recNum ; // Record Number  
+    IndexEntry* left ; // left node  
+    IndexEntry* right ; // right pointer 
+
+ } ;
+
+// create insert node 
+
+
+
+ 
+
+
+
+
+
+void printTree(IndexEntry *n) {
+    if (n != nullptr) {
+        printTree(n->left);
+        cout << n->acctID << "   " << n->recNum << endl;
+        printTree(n->right);
+    }
+}
+
+
+// this function search  and inserts  into binary search tree 
+
+void search_database_acco_rec(int&,int&) ;
+
+
+
+
+
+
+void PreOrder (IndexEntry* n )
+
+{
+
+    if(n == NULL )
+        return ; 
+
+
+    cout << n->recNum << " " << n->acctID << " " << endl; 
+
+    PreOrder(n->left) ;
+
+    PreOrder(n->right) ;
+
+}
+
+
+void InOrder(IndexEntry* n) 
+{
+    if(n == NULL)
+        return ; 
+
+    InOrder(n->left) ; 
+
+    cout << n->recNum << " " << n->acctID << " " << endl  ; 
+
+    InOrder(n->right) ; 
+     
+
+}
+
+void PostOrder(IndexEntry* n)
+{
+    if(n== NULL) 
+        return ; 
+
+    PostOrder(n->left) ; 
+    PostOrder(n->right) ; 
+
+    cout << n->recNum << " " << n->acctID << " " << endl;     
+}
+
+
+void insertNode(IndexEntry*& , int, int ) ; 
+
+void insertNode(IndexEntry *&root, int record_num , int acc_ID) 
+
+{
+
+    if (root == nullptr) // checks the root variable if it is a nullptr and creates root 
+    
+    {
+        root = new IndexEntry;
+        root->acctID = acc_ID;
+        root->recNum = record_num; 
+        root->left = nullptr;
+        root->right = nullptr;
+    } 
+    
+    else // if it is not a root ptr
+    
+    {
+        if (acc_ID < root->acctID) // if the account id inserted is less than root acccount id in root 
+            insertNode(root->left, record_num, acc_ID); // then recursively call insertNode again with left as the head pointer to enter the left sub tree
+        else
+            insertNode(root->right, record_num,acc_ID);
+    }
+}
+
+// returns record number 
+int IndexEntry_Search(IndexEntry *& root,int key_acc_ID)
+
+{
+    if (root == NULL)
+        return -1; 
+
+    if(root->acctID == key_acc_ID)// if the ket account id is in root 
+
+    { 
+        return root->recNum ; // return the record number 
+    }
+
+
+    if(key_acc_ID < root->acctID)// access the left side of tree
+
+    { 
+        return IndexEntry_Search(root->left, key_acc_ID) ;  // recursively run     
+    }
+
+    if(key_acc_ID > root->acctID) 
+
+    {
+
+       return IndexEntry_Search(root->right,key_acc_ID) ; 
+    }
+        
+    
+    return -1 ; 
+}
+
+ 
+void search_database_acco_rec(IndexEntry*& root , int& record_out, int& account_out) 
+
+{
+    ifstream database; // creates data base object 
+    database.open("accounts.dat") ; // opens account 
+
+    string record,account ; // holds contents of database 
+    int rec_num , acc_num ; 
+
+    getline(database,record) ; // removes first line from the database to access account and record number 
+
+
+    while(!database.eof())
+    {
+
+        database >> record >> account ; // access first two lines to print 
+
+        rec_num = stoi(record) ; // converts string to int
+        acc_num = stoi(account);  // converts string to int
+
+        record_out = rec_num ; // sets the address to rec
+        account_out = acc_num ; // sets address to account 
+
+        insertNode( root, rec_num, acc_num ) ; 
+
+        //cout << record_out << " "<< account_out << endl;  // print lines
+
+        getline(database,record) ; // skips line
+ 
+
+    }
+
+    database.close() ; 
+
+}
+
+
+void search_client_information(int record_in)
+{
+    // if client information is not found -1 is record_in value
+
+    if(record_in == -1){
+        cout << "Matched record number is -1\n" ;
+        cout<< "Corresponding account record from the database file\n \n" ; 
+        cout<< "                 Account ID not in Data" ; 
+
+    }
+
+
+
+    string rec_key = to_string(record_in) ; // converts int to string to compare values 
+    string s , record , account, firstName, lastName, balance;  
+
+    fstream database_1 ; // makes filestream object 
+    database_1.open("accounts.dat") ; // opens file 
+
+    getline(database_1,s) ; // skips a line 
+
+    while(!database_1.eof() )
+
+    {
+        database_1 >> record >> account >> firstName >> lastName>> balance ; // access the record number 
+        if(record == rec_key){
+            cout << "Matched record number is: " << rec_key << endl << endl ;
+            cout<< "Corresponding account record from the database file\n \n" ; 
+            cout <<"Record #     Account ID    First Name     Last Name     Balance  " << endl; 
+            cout << left << setw(13) << rec_key  << setw(14) <<   account << setw(15)  << firstName << setw(13)<<lastName<< setw(15) << balance ; 
+        }
+        getline(database_1,s) ; // skips line 
+    }
+    
+    database_1.close() ; 
+
+}
+int main () 
+
+{
+    int record_in, account_in , key_found  ; 
+
+    string key ; 
+
+    cout << "Enter account ID: \n" ; 
+
+    getline(cin,key) ; 
+
+    int key_num  = stoi(key) ; 
+
+    //cout << key_num ; 
+
+    IndexEntry *root = nullptr ; // create root in main of type indexentry 
+
+    cout << endl ; 
+    search_database_acco_rec(root,record_in,account_in) ; // search database and creates BST using insert function 
+
+    key_found = IndexEntry_Search(root,key_num); // searches for key 
+
+  
+
+    search_client_information(key_found) ; // uses key from search to corresponing account number in data base; 
+
+    // make function to search file again and compare it with each line 
+    
+    cout << endl ; 
+    system("pause") ; 
+
+
+    
+}
